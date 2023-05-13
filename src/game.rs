@@ -39,6 +39,7 @@ impl State {
         // println!("------ new iteration created | previous len: {}", previous_state.tiles.len());
 
         let (mut x, mut y): (usize, usize) = (0, 0);
+        //cap size of new tile list
         let mut tiles: Vec<Tile> = Vec::with_capacity(previous_state.tiles.len());
 
         for tile in &previous_state.tiles {

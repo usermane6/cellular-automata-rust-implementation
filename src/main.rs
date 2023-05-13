@@ -20,7 +20,7 @@ pub fn main() {
 
     let mut n_display = Display::new(video_subsystem, "Cells {rust test}", (800, 800));
     let texture_creator = n_display.texture_creator();
-    let mut n_pixel_display = PixelTexture::new(&texture_creator, (400, 400));
+    let mut n_pixel_display = PixelTexture::new(&texture_creator, (800, 800));
 
 
     let mut event_pump = sdl_context.event_pump().unwrap();
