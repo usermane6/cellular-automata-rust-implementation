@@ -8,17 +8,39 @@ enum Tile {
     ALIVE,
 }
 
-pub struct State {
-    tiles: Vec<Tile>,
-    size: (usize, usize)
+pub struct Filter {
+    l: Vec<i32>
 }
 
-impl State {
-    pub fn random(pixel_texture: &mut PixelTexture<'_>) -> State {
+impl Filter {
+    pub fn new(range: i32, size: (usize, usize)) -> Filter {
+        let mut l: Vec<i32> = vec![];
+        let w = size.0 as i32;
+
+        for i in -range..range {
+            for j in -range..range {
+                let (x, y) = (i, j);
+                l.push((w * y) + x)
+            }
+        }
+        
+        Filter { l }
+    }
+
+}
+
+pub struct State<'a> {
+    tiles: Vec<Tile>,
+    size: (usize, usize),
+    filter: &'a Filter
+}
+
+impl State<'_> {
+    pub fn random<'a>(size: (usize, usize), filter: &'a Filter) -> State<'a> {
         let mut rng = thread_rng();
         let mut tiles: Vec<Tile> = Vec::new();
 
-        for _ in 0..pixel_texture.size.0 * pixel_texture.size.1 {
+        for _ in 0..size.0 * size.1 {
             let val = rng.gen_range(0..=1);
             tiles.push(
                 match val {
@@ -31,7 +53,7 @@ impl State {
 
         // println!("------ random len: {}", tiles.len());
 
-        State { tiles, size: pixel_texture.size }
+        State { tiles, size: size, filter }
     }
 
     pub fn from_previous(previous_state: State) -> State {
@@ -54,7 +76,7 @@ impl State {
             if x >= previous_state.size.0 { x = 0; y += 1; }
         }
 
-        State{ tiles, size: previous_state.size }
+        State{ tiles, size: previous_state.size, filter: previous_state.filter }
     }
 
     fn get_neighbor_sum(&self, x: usize, y: usize, range: i32) -> usize {
@@ -66,20 +88,23 @@ impl State {
             for j in -range..=range {
                 if j == i && j == 0 {continue;}
 
-                // println!("({}, {}), len: {}", check_x, check_y, self.tiles.len());  
-
-                let id = self.id_from_pos(
-                    ((((self.size.0 + x) as i32) + i) % self.size.0 as i32) as usize, 
-                    ((((self.size.1 + y) as i32) + j) % self.size.1 as i32) as usize
-                );
-                
-                if let Tile::ALIVE = self.tiles[id] { total += 1; }
+                total += self.tile_val(
+                        wrap(x as i32 + i, self.size.0 as i32) as usize,
+                        wrap(y as i32 + j, self.size.1 as i32) as usize
+                    );
             }
         }
 
         total
     }
 
+    fn tile_val(&self, x: usize, y: usize) -> usize {
+        let id = self.id_from_pos(x, y);
+        
+        if let Tile::ALIVE = self.tiles[id] { 1 }
+        else { 0 }
+    }
+ 
     fn id_from_pos(&self, x: usize, y: usize) -> usize {
         (( self.size.0) * y) + x
     }
@@ -110,4 +135,8 @@ impl State {
 
         pixel_texture.update_texture(pixels_slice)
     }
+}
+
+fn wrap(a: i32, len: i32) -> i32 {
+    (len + a) % len
 }

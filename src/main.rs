@@ -1,6 +1,6 @@
 extern crate sdl2;
 
-use game::State;
+use game::{State, Filter};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
@@ -20,11 +20,13 @@ pub fn main() {
 
     let mut n_display = Display::new(video_subsystem, "Cells {rust test}", (800, 800));
     let texture_creator = n_display.texture_creator();
-    let mut n_pixel_display = PixelTexture::new(&texture_creator, (800, 800));
+    let grid_size = (800, 800);
+    let mut n_pixel_display = PixelTexture::new(&texture_creator, grid_size);
 
 
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut state = State::random(&mut n_pixel_display);
+    let filter = Filter::new(1, grid_size);
+    let mut state = State::random(n_pixel_display.size, &filter); // initial random state
 
     // let texture_creator = n_display.canvas.texture_creator();
 
